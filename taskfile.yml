@@ -1,5 +1,6 @@
 version: "3"
 
+dotenv: ['.env']
 
 tasks:
   build:
@@ -21,6 +22,17 @@ tasks:
     desc: "Run the application"
     cmds:
       - go run cmd/api/main.go
+
+  run-migration-up:
+    desc: "Execute migration file up"
+    cmds:
+      - migrate -path databases/migrations -database "postgres://${BLUEPRINT_DB_USERNAME}:${BLUEPRINT_DB_PASSWORD}@${BLUEPRINT_DB_HOST}:${BLUEPRINT_DB_PORT}/${BLUEPRINT_DB_DATABASE}?sslmode=disable" up
+  
+  run-migration-down:
+    desc: "Execute migration file up"
+    cmds:
+      - migrate -path databases/migrations -database "postgres://${BLUEPRINT_DB_USERNAME}:${BLUEPRINT_DB_PASSWORD}@${BLUEPRINT_DB_HOST}:${BLUEPRINT_DB_PORT}/${BLUEPRINT_DB_DATABASE}?sslmode=disable" down
+
 
   docker-run:
     desc: "Create and run the DB container"
@@ -77,3 +89,13 @@ tasks:
             exit 1
           fi
         fi
+
+  make-migration-seq:
+    desc: "Create migration file with sequence number"
+    cmds:
+      - migrate create -ext sql -dir databases/migrations -seq {{.name}}
+
+  make-migration-date:
+    desc: "Create migration file with datetime"
+    cmds:
+      - migrate create -ext sql -dir databases/migrations {{.name}}
