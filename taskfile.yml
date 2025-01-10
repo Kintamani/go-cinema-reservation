@@ -1,0 +1,79 @@
+version: "3"
+
+
+tasks:
+  build:
+    desc: "Build the application"
+    cmds:
+      - echo "Building..."
+      - go build -o main cmd/api/main.go 
+
+  test:
+    desc: "Run tests for the application"
+    silent: true
+    cmds:
+      - echo "Testing..."
+      - go test ./... -v
+    depends_on:
+      - build
+
+  run:
+    desc: "Run the application"
+    cmds:
+      - go run cmd/api/main.go
+
+  docker-run:
+    desc: "Create and run the DB container"
+    silent: true
+    cmds:
+      - echo "Creating and running the DB container..."
+      - |
+        if docker compose up --build 2>/dev/null; then
+          :
+        else
+          echo "Falling back to Docker Compose V1"
+          docker compose up --build
+        fi
+
+  docker-down:
+    desc: "Shutdown the DB container"
+    silent: true
+    cmds:
+      - echo "Shutting down the DB container..."
+      - |
+        if docker compose down 2>/dev/null; then
+          :
+        else
+          echo "Falling back to Docker Compose V1"
+          docker compose down
+        fi
+
+  itest:
+    desc: "Run integration tests for the application"
+    cmds:
+      - echo "Running integration tests..."
+      - go test ./internal/database -v
+
+  clean:
+    desc: "Clean the binary"
+    cmds:
+      - echo "Cleaning..."
+      - rm -f main 
+      - echo "Cleaning complete."
+
+  watch:
+    desc: "Live reload using air"
+    cmds:
+      - |
+        if command -v air > /dev/null; then
+          air
+        else
+          read -p "Go's 'air' is not installed on your machine. Do you want to install it? [Y/n] " choice
+          if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then
+            go install github.com/air-verse/air@latest
+            air
+          else
+            echo "You chose not to install air. Exiting..."
+            exit 1
+          fi
+        fi
